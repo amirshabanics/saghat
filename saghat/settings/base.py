@@ -37,11 +37,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-print("hereee", settings)
-if settings.APP_ENV == AppEnv.dev:
-    from .dev import *  # noqa: F403
-elif settings.APP_ENV == AppEnv.prod:
-    from .prod import *  # noqa: F403
 
 # ── Django configuration ──────────────────────────────────────────────────────
 
