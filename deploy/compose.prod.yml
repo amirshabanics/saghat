@@ -1,68 +1,10 @@
-# =============================================================================
-# Production Docker Compose Override - adds Caddy reverse proxy
-# =============================================================================
-# Usage:
-#   docker compose -f compose.yml -f deploy/compose.prod.yml up -d --build
+# DEPRECATED: This file has been superseded by docker/compose.prod.yml
 #
-# This file extends the base compose.yml by:
-#   - Adding the Caddy reverse proxy service
-#   - Removing the direct port exposure from the web service (Caddy handles it)
-#   - Adding restart policies for production reliability
-#   - Adding named volumes for Caddy data persistence
-# =============================================================================
-
-services:
-  # ---------------------------------------------------------------------------
-  # Override web service for production
-  # ---------------------------------------------------------------------------
-  web:
-    # Remove the bind-mount of source code (use image as-is in production)
-    volumes: []
-    # Remove direct port exposure - Caddy handles external traffic
-    ports: []
-    restart: unless-stopped
-    environment:
-      DJANGO_SETTINGS_MODULE: saghat.settings.prod
-
-  # ---------------------------------------------------------------------------
-  # Override db for production
-  # ---------------------------------------------------------------------------
-  db:
-    restart: unless-stopped
-
-  # ---------------------------------------------------------------------------
-  # Override redis for production
-  # ---------------------------------------------------------------------------
-  redis:
-    restart: unless-stopped
-
-  # ---------------------------------------------------------------------------
-  # Caddy reverse proxy
-  # ---------------------------------------------------------------------------
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      # Caddyfile configuration (read-only)
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      # Caddy data (certificates, OCSP staples, etc.) - persisted across restarts
-      - caddy_data:/data
-      # Caddy config cache
-      - caddy_config:/config
-      # Access logs
-      - caddy_logs:/var/log/caddy
-    depends_on:
-      - web
-    networks:
-      - default
-
-volumes:
-  caddy_data:
-    driver: local
-  caddy_config:
-    driver: local
-  caddy_logs:
-    driver: local
+# The production Docker Compose configuration is now at:
+#   docker/compose.prod.yml
+#
+# To deploy:
+#   cd /path/to/saghat
+#   docker compose -f docker/compose.prod.yml up -d
+#
+# See deploy/README.md for full deployment instructions.

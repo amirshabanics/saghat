@@ -10,7 +10,7 @@ class AppEnv(str, Enum):
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(extra="ignore")
 
     # Django
     STATIC_ROOT: str = "/static_root"

@@ -1,0 +1,20 @@
+services:
+  frontend:
+    build:
+      context: ../src/frontend
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - .env.frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../src/frontend:/app
+      - /app/node_modules
+    develop:
+      watch:
+        - action: sync
+          path: ../src/frontend/src
+          target: /app/src
+        - action: rebuild
+          path: ../src/frontend/package.json

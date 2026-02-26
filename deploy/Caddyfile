@@ -1,60 +1,39 @@
-# =============================================================================
-# Caddy v2 Configuration - IP-based deployment (no domain / no TLS)
-# =============================================================================
-# Replace YOUR_SERVER_IP with your actual server IP address, or leave as :80
-# to accept connections on all interfaces.
-#
-# Since we have no domain name, HTTPS/TLS is not available.
-# All traffic is served over plain HTTP on port 80.
-# =============================================================================
+# ── Development (HTTP only) ────────────────────────────────────────────────────
+# Usage: set CADDY_HOST=:80 in environment, or use the prod block below
 
-:80 {
-    # ---------------------------------------------------------------------------
-    # Health check endpoint - returns 200 OK without hitting Django
-    # ---------------------------------------------------------------------------
+{$CADDY_HOST:localhost} {
+
+    # Health check endpoint
     handle /_health {
         respond "OK" 200
     }
 
-    # ---------------------------------------------------------------------------
-    # Reverse proxy to Django/Gunicorn (service name 'web', port 8000)
-    # ---------------------------------------------------------------------------
-    reverse_proxy web:8000 {
-        # Forward real client IP to Django
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-        header_up Host {host}
-
-        # Health check for the upstream
-        health_uri /_health
-        health_interval 30s
-        health_timeout 10s
+    # Django API — proxy to gunicorn
+    handle /api/* {
+        reverse_proxy web:8000
     }
 
-    # ---------------------------------------------------------------------------
-    # Response headers
-    # ---------------------------------------------------------------------------
-    header {
-        # Remove server identification
-        -Server
-        # Basic security headers
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "DENY"
-        X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
+    # Django admin
+    handle /admin/* {
+        reverse_proxy web:8000
     }
 
-    # ---------------------------------------------------------------------------
-    # Access logging
-    # ---------------------------------------------------------------------------
+    # Django static files
+    handle /static/* {
+        root * /static_root
+        file_server
+    }
+
+    # React SPA — serve built assets, fallback to index.html for client-side routing
+    handle {
+        root * /srv/frontend
+        try_files {path} {path}/ /index.html
+        file_server
+    }
+
+    # Logging
     log {
-        output file /var/log/caddy/access.log {
-            roll_size 100mb
-            roll_keep 5
-            roll_keep_for 720h
-        }
-        format json
-        level INFO
+        output stdout
+        format console
     }
 }

@@ -1,3 +1,5 @@
+> **Updated structure**: Docker Compose files have moved to `docker/`. See `docker/compose.prod.yml` for production deployment and `docker/compose.yml` for local development.
+
 # Saghat - Deployment Guide
 
 This guide covers deploying Saghat to a Linux server using Docker Compose + Caddy as a reverse proxy, with automated CD via GitHub Actions.
