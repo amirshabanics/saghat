@@ -1,0 +1,71 @@
+name: CD - Deploy to Production
+
+# Required GitHub Secrets:
+#   SERVER_HOST        - Server IP address (e.g., 192.168.1.100)
+#   SERVER_USER        - SSH username with sudo privileges
+#   SERVER_PASSWORD    - SSH password for the user
+#   SERVER_DEPLOY_PATH - Absolute path on server where app lives (e.g., /opt/saghat)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script_stop: true
+          script: |
+            set -e
+
+            echo "==> Navigating to deploy directory..."
+            cd ${{ secrets.SERVER_DEPLOY_PATH }}
+
+            echo "==> Pulling latest code from main..."
+            git pull origin main
+
+            echo "==> Building and starting containers..."
+            docker compose -f compose.yml -f deploy/compose.prod.yml up -d --build
+
+            echo "==> Running database migrations..."
+            docker compose -f compose.yml -f deploy/compose.prod.yml exec -T web uv run python manage.py migrate --noinput
+
+            echo "==> Collecting static files..."
+            docker compose -f compose.yml -f deploy/compose.prod.yml exec -T web uv run python manage.py collectstatic --noinput
+
+            echo "==> Deployment complete!"
+
+      - name: Health Check
+        run: |
+          echo "Waiting for app to be ready..."
+          sleep 10
+
+          # Retry health check up to 5 times with 10s intervals
+          for i in $(seq 1 5); do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 10 \
+              "http://${{ secrets.SERVER_HOST }}/_health" || echo "000")
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Health check passed (HTTP $HTTP_STATUS)"
+              exit 0
+            fi
+
+            echo "Attempt $i/5: Health check returned HTTP $HTTP_STATUS. Retrying in 10s..."
+            sleep 10
+          done
+
+          echo "❌ Health check failed after 5 attempts"
+          exit 1

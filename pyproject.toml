@@ -23,6 +23,13 @@ dev = [
     "ruff>=0.9",
 ]
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "saghat.settings.dev"
+python_files = ["tests.py", "test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"

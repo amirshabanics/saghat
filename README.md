@@ -96,18 +96,21 @@ Once running, visit: **http://localhost:8000/api/docs**
 
 See [`.env.example`](.env.example) for all required variables.
 
-| Variable              | Required | Default                    | Description                                                       |
-| --------------------- | -------- | -------------------------- | ----------------------------------------------------------------- |
-| `SECRET_KEY`          | ✅       | —                          | Django secret key                                                 |
-| `DEBUG`               | ❌       | `False`                    | Enable debug mode                                                 |
-| `ALLOWED_HOSTS`       | ❌       | `["*"]`                    | Allowed host list (JSON array)                                    |
-| `DATABASE_URL`        | ✅       | —                          | PostgreSQL connection URL (`postgresql://user:pass@host:port/db`) |
-| `REDIS_URL`           | ❌       | `redis://localhost:6379/0` | Redis connection URL                                              |
-| `JWT_SECRET_KEY`      | ✅       | —                          | JWT signing secret                                                |
-| `JWT_ALGORITHM`       | ❌       | `HS256`                    | JWT algorithm                                                     |
-| `JWT_EXPIRE_MINUTES`  | ❌       | `10080` (7 days)           | JWT token expiry in minutes                                       |
-| `BITPIN_API_BASE_URL` | ❌       | `https://api.bitpin.ir`    | Bitpin API base URL                                               |
-| `BITPIN_API_KEY`      | ❌       | `None`                     | Bitpin API key (omit to skip verification in dev)                 |
+| Variable                 | Required | Default                    | Description                                                       |
+| ------------------------ | -------- | -------------------------- | ----------------------------------------------------------------- |
+| `SECRET_KEY`             | ✅       | —                          | Django secret key                                                 |
+| `DEBUG`                  | ❌       | `False`                    | Enable debug mode                                                 |
+| `APP_ENV`                | ❌       | `dev`                      | Environment selector: `dev` or `prod`                             |
+| `ALLOWED_HOSTS`          | ❌       | `["*"]`                    | Allowed host list (JSON array string)                             |
+| `DATABASE_URL`           | ✅       | —                          | PostgreSQL connection URL (`postgresql://user:pass@host:port/db`) |
+| `REDIS_URL`              | ❌       | `redis://localhost:6379/0` | Redis connection URL                                              |
+| `JWT_SECRET_KEY`         | ✅       | —                          | JWT signing secret                                                |
+| `JWT_ALGORITHM`          | ❌       | `HS256`                    | JWT algorithm                                                     |
+| `JWT_EXPIRE_MINUTES`     | ❌       | `10080` (7 days)           | JWT token expiry in minutes                                       |
+| `BITPIN_API_BASE_URL`    | ❌       | `https://api.bitpin.ir`    | Bitpin API base URL                                               |
+| `BITPIN_API_KEY`         | ❌       | `None`                     | Bitpin API key (omit to skip verification in dev)                 |
+| `STATIC_ROOT`            | ❌       | `/static_root`             | Directory for collected static files                              |
+| `DJANGO_SETTINGS_MODULE` | ❌       | `saghat.settings.dev`      | Settings module to use (`dev` or `prod`)                          |
 
 ## Business Logic
 
@@ -205,6 +208,31 @@ Options:
 - `--min-fee DECIMAL` — Minimum monthly membership fee in USDT (default: `20`)
 - `--max-months INT` — Maximum loan repayment months (default: `24`)
 - `--min-payment DECIMAL` — Minimum monthly loan payment in USDT (default: `20`)
+
+## Testing
+
+Run the full test suite with:
+
+```bash
+uv run pytest
+```
+
+Run a specific app's tests:
+
+```bash
+uv run pytest apps/users/tests/
+uv run pytest apps/loans/tests/
+uv run pytest apps/payments/tests/
+```
+
+### Test Categories
+
+| Category       | Location                                                       | Description                                                      |
+| -------------- | -------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Unit**       | `*/tests/test_models.py`, `apps/loans/tests/test_algorithm.py` | Model properties, constraints, and the scoring algorithm         |
+| **End-to-end** | `*/tests/test_api.py`                                          | Full HTTP request/response cycles via Django Ninja's test client |
+
+Shared fixtures (`regular_user`, `main_user`, `config`) are defined in [`conftest.py`](conftest.py) at the project root. Bitpin is mocked in API tests so no real network calls are made.
 
 ## Development Notes
 
