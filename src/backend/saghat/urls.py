@@ -7,7 +7,12 @@ from apps.users.api import router as users_router
 from apps.payments.api import router as payments_router
 from apps.loans.api import router as loans_router
 
-api = NinjaAPI(title="Saghat API", version="1.0.0", docs_url="/docs")
+api = NinjaAPI(
+    title="Saghat API",
+    version="1.0.0",
+    docs_url="/docs",
+    openapi_url="/openapi.json",
+)
 api.add_router("/auth", users_router)
 api.add_router("/payments", payments_router)
 api.add_router("/loans", loans_router)

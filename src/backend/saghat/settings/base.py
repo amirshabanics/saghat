@@ -1,3 +1,4 @@
+import itertools
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import PostgresDsn, RedisDsn
 from typing import Optional
@@ -10,7 +11,7 @@ class AppEnv(str, Enum):
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(extra="ignore")
+    model_config = SettingsConfigDict(extra="ignore", env_file=".env")
 
     # Django
     STATIC_ROOT: str = "/static_root"
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "ninja",
     "apps.users.apps.UsersConfig",
     "apps.payments.apps.PaymentsConfig",
@@ -59,6 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -66,6 +69,13 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ALLOWED_ORIGINS: list[str] = list(
+    itertools.chain.from_iterable(
+        [f"http://{host}", f"https://{host}"]
+        for host in settings.ALLOWED_HOSTS
+    )
+)
 
 ROOT_URLCONF = "saghat.urls"
 
